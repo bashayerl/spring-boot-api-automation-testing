@@ -16,6 +16,11 @@ public class UsersPage {
     private By nameField = By.id("name");
     private By emailField = By.id("email");
     private By submitButton = By.id("submit");
+    private By searchField = By.id("searchName");
+    private By searchButton = By.xpath("//button[normalize-space()='Search']");
+    private By resetButton = By.xpath("//button[normalize-space()='Reset']");
+    private By userTableBody = By.id("userBody");
+    private By messageBox = By.id("messageBox");
 
     public UsersPage(WebDriver driver) {
         this.driver = driver;
@@ -33,9 +38,55 @@ public class UsersPage {
         driver.findElement(submitButton).click();
     }
 
+    public void searchUser(String name) {
+        wait.until(ExpectedConditions.visibilityOfElementLocated(searchField));
+        driver.findElement(searchField).clear();
+        driver.findElement(searchField).sendKeys(name);
+
+        wait.until(ExpectedConditions.elementToBeClickable(searchButton));
+        driver.findElement(searchButton).click();
+    }
+
+    public void resetSearch() {
+        wait.until(ExpectedConditions.elementToBeClickable(resetButton));
+        driver.findElement(resetButton).click();
+    }
+
+    public void waitUntilUserIsVisibleInTable(String name) {
+        WebDriverWait tableWait = new WebDriverWait(driver, Duration.ofSeconds(10));
+        tableWait.until(d -> driver.findElement(userTableBody).getText().contains(name));
+    }
+
+    public void waitUntilUserIsNotVisibleInTable(String name) {
+        WebDriverWait tableWait = new WebDriverWait(driver, Duration.ofSeconds(10));
+        tableWait.until(d -> !driver.findElement(userTableBody).getText().contains(name));
+    }
+
+    public boolean isUserVisible(String name) {
+        return driver.findElement(userTableBody).getText().contains(name);
+    }
+
+    public boolean isUserNotVisible(String name) {
+        return !driver.findElement(userTableBody).getText().contains(name);
+    }
+
+    public void waitUntilMessageContains(String expectedMessage) {
+        WebDriverWait messageWait = new WebDriverWait(driver, Duration.ofSeconds(10));
+        messageWait.until(d -> driver.findElement(messageBox).getText().contains(expectedMessage));
+    }
+
+    public String getMessageText() {
+        wait.until(ExpectedConditions.visibilityOfElementLocated(messageBox));
+        return driver.findElement(messageBox).getText();
+    }
+
+    public boolean isMessageVisible(String expectedMessage) {
+        return driver.findElement(messageBox).getText().contains(expectedMessage);
+    }
+
     public void deleteFirstUser() {
         WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(5));
-        By deleteBtn = By.xpath("//button[text()='Delete']");
+        By deleteBtn = By.xpath("//button[normalize-space()='Delete']");
 
         wait.until(ExpectedConditions.elementToBeClickable(deleteBtn));
         driver.findElement(deleteBtn).click();

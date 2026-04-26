@@ -120,20 +120,163 @@ public class UserE2ETest {
             test.pass("Users were added and verified successfully in the database");
 
         } catch (Exception e) {
-            try {
-                driver.switchTo().alert().accept();
-            } catch (Exception ignored) {
-            }
-
-            String screenshotPath = captureScreenshot("Error_" + System.currentTimeMillis());
-            test.addScreenCaptureFromPath(screenshotPath);
-
-            test.fail("Test failed");
-            test.fail("Exception type: " + e.getClass().getSimpleName());
-            test.fail("Exception message: " + e.getMessage());
-
+            handleTestFailure("User lifecycle test failed", "Error_", e);
             throw e;
         }
+    }
+
+    @Test
+    @DisplayName("اختبار البحث عن المستخدم من الواجهة")
+    void testSearchUserFromUI() {
+        try {
+            test.assignCategory("Search");
+
+            UsersPage userPage = new UsersPage(driver);
+
+            test.info("Opening User Management page");
+            driver.get("http://localhost:8080/index.html");
+
+            test.info("Adding first user: Bashayer Test");
+            userPage.addUser("Bashayer Test", "bashayer.search@test.com");
+            userPage.handleAlert();
+
+            test.info("Adding second user: Ahmad Test");
+            userPage.addUser("Ahmad Test", "ahmad.search@test.com");
+            userPage.handleAlert();
+
+            test.info("Waiting until users are saved in the database");
+            WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
+            wait.until(d -> userRepository.count() == 2);
+
+            test.info("Searching for user by name: Bash");
+            userPage.searchUser("Bash");
+
+            test.info("Waiting until Bashayer Test appears in search results");
+            userPage.waitUntilUserIsVisibleInTable("Bashayer Test");
+
+            test.info("Waiting until Ahmad Test disappears from search results");
+            userPage.waitUntilUserIsNotVisibleInTable("Ahmad Test");
+
+            test.info("Verifying Bashayer Test is visible after search");
+            assertTrue(
+                    userPage.isUserVisible("Bashayer Test"),
+                    "Bashayer Test should be visible after search"
+            );
+
+            test.info("Verifying Ahmad Test is not visible after search");
+            assertTrue(
+                    userPage.isUserNotVisible("Ahmad Test"),
+                    "Ahmad Test should not be visible after search"
+            );
+
+            String successScreenshot = captureScreenshot("Search_Success_" + System.currentTimeMillis());
+            test.addScreenCaptureFromPath(successScreenshot);
+
+            test.pass("Search user test passed successfully");
+
+        } catch (Exception e) {
+            handleTestFailure("Search user test failed", "Search_Error_", e);
+            throw e;
+        }
+    }
+
+    @Test
+    @DisplayName("اختبار منع إضافة إيميل مكرر من الواجهة")
+    void testDuplicateEmailFromUI() {
+        try {
+            test.assignCategory("Negative UI Test");
+            test.assignCategory("Duplicate Email");
+
+            UsersPage userPage = new UsersPage(driver);
+
+            test.info("Opening User Management page");
+            driver.get("http://localhost:8080/index.html");
+
+            test.info("Adding first user with email: duplicate.ui@test.com");
+            userPage.addUser("First User", "duplicate.ui@test.com");
+            userPage.handleAlert();
+
+            WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
+            wait.until(d -> userRepository.count() == 1);
+
+            test.info("Trying to add second user with the same email");
+            userPage.addUser("Second User", "duplicate.ui@test.com");
+            userPage.handleAlert();
+
+            test.info("Waiting for duplicate email error message");
+            userPage.waitUntilMessageContains("Email already exists");
+
+            test.info("Verifying duplicate email error message is displayed");
+            assertTrue(
+                    userPage.isMessageVisible("Email already exists"),
+                    "Duplicate email message should be visible"
+            );
+
+            test.info("Verifying database still contains only one user");
+            assertEquals(1, userRepository.count(), "Database should contain only one user");
+
+            String successScreenshot = captureScreenshot("Duplicate_Email_Success_" + System.currentTimeMillis());
+            test.addScreenCaptureFromPath(successScreenshot);
+
+            test.pass("Duplicate email UI validation test passed successfully");
+
+        } catch (Exception e) {
+            handleTestFailure("Duplicate email UI test failed", "Duplicate_Email_Error_", e);
+            throw e;
+        }
+    }
+
+    @Test
+    @DisplayName("اختبار منع إضافة إيميل غير صحيح من الواجهة")
+    void testInvalidEmailFromUI() {
+        try {
+            test.assignCategory("Negative UI Test");
+            test.assignCategory("Invalid Email");
+
+            UsersPage userPage = new UsersPage(driver);
+
+            test.info("Opening User Management page");
+            driver.get("http://localhost:8080/index.html");
+
+            test.info("Trying to add user with invalid email");
+            userPage.addUser("Invalid Email User", "not-an-email");
+            userPage.handleAlert();
+
+            test.info("Waiting for invalid email error message");
+            userPage.waitUntilMessageContains("يجب إدخال البريد الإلكتروني بصيغة صحيحة");
+
+            test.info("Verifying invalid email error message is displayed");
+            assertTrue(
+                    userPage.isMessageVisible("يجب إدخال البريد الإلكتروني بصيغة صحيحة"),
+                    "Invalid email message should be visible"
+            );
+
+            test.info("Verifying database is still empty");
+            assertEquals(0, userRepository.count(), "Database should still be empty");
+
+            String successScreenshot = captureScreenshot("Invalid_Email_Success_" + System.currentTimeMillis());
+            test.addScreenCaptureFromPath(successScreenshot);
+
+            test.pass("Invalid email UI validation test passed successfully");
+
+        } catch (Exception e) {
+            handleTestFailure("Invalid email UI test failed", "Invalid_Email_Error_", e);
+            throw e;
+        }
+    }
+
+    private void handleTestFailure(String message, String screenshotPrefix, Exception e) {
+        try {
+            driver.switchTo().alert().accept();
+        } catch (Exception ignored) {
+        }
+
+        String screenshotPath = captureScreenshot(screenshotPrefix + System.currentTimeMillis());
+        test.addScreenCaptureFromPath(screenshotPath);
+
+        test.fail(message);
+        test.fail("Exception type: " + e.getClass().getSimpleName());
+        test.fail("Exception message: " + e.getMessage());
     }
 
     public String captureScreenshot(String name) {

@@ -2,49 +2,151 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>QA Management</title>
+    <title>User Management | QA Automation</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
-<body>
-<h2>User Management</h2>
+<body class="bg-light">
 
-<input type="hidden" id="userId">
-<input type="text" id="name" placeholder="Name">
-<input type="email" id="email" placeholder="Email">
+<nav class="navbar navbar-dark bg-primary mb-4">
+    <div class="container">
+        <span class="navbar-brand mb-0 h1">User Management</span>
+        <span class="text-white">QA Automation Project</span>
+    </div>
+</nav>
 
-<button id="submit" onclick="addUser()">Add</button>
-<button id="updateBtn" onclick="updateUser()" style="display:none;">Update</button>
-<button id="cancelBtn" onclick="cancelEdit()" style="display:none;">Cancel</button>
+<div class="container">
 
-<h3>Search Users</h3>
-<input type="text" id="searchName" placeholder="Search by name">
-<button onclick="searchUsers()">Search</button>
-<button onclick="resetSearch()">Reset</button>
+    <div id="messageBox" class="alert d-none" role="alert"></div>
 
-<h3>Users List</h3>
-<table border="1">
-    <thead>
-    <tr>
-        <th>Name</th>
-        <th>Email</th>
-        <th>Action</th>
-    </tr>
-    </thead>
-    <tbody id="userBody"></tbody>
-</table>
+    <div class="row g-4">
+        <div class="col-lg-4">
+            <div class="card shadow-sm">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">User Form</h5>
+                </div>
+
+                <div class="card-body">
+                    <input type="hidden" id="userId">
+
+                    <div class="mb-3">
+                        <label for="name" class="form-label">Name</label>
+                        <input type="text" id="name" class="form-control" placeholder="Enter user name">
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="email" class="form-label">Email</label>
+                        <input type="email" id="email" class="form-control" placeholder="Enter user email">
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <button id="submit" class="btn btn-primary" onclick="addUser()">Add</button>
+                        <button id="updateBtn" class="btn btn-success" onclick="updateUser()" style="display:none;">Update</button>
+                        <button id="cancelBtn" class="btn btn-secondary" onclick="cancelEdit()" style="display:none;">Cancel</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card shadow-sm mt-4">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Search Users</h5>
+                </div>
+
+                <div class="card-body">
+                    <div class="input-group">
+                        <input type="text" id="searchName" class="form-control" placeholder="Search by name">
+                        <button class="btn btn-outline-primary" onclick="searchUsers()">Search</button>
+                        <button class="btn btn-outline-secondary" onclick="resetSearch()">Reset</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-8">
+            <div class="card shadow-sm">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Users List</h5>
+                    <span id="usersCount" class="badge bg-primary">0 Users</span>
+                </div>
+
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover table-bordered align-middle">
+                            <thead class="table-primary">
+                            <tr>
+                                <th>Name</th>
+                                <th>Email</th>
+                                <th class="text-center">Action</th>
+                            </tr>
+                            </thead>
+                            <tbody id="userBody"></tbody>
+                        </table>
+                    </div>
+
+                    <div id="emptyState" class="text-center text-muted py-4 d-none">
+                        No users found.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 
 <script>
+    function showMessage(message, type) {
+        const messageBox = document.getElementById('messageBox');
+        messageBox.className = 'alert alert-' + type;
+        messageBox.textContent = message;
+        messageBox.classList.remove('d-none');
+
+        setTimeout(() => {
+            messageBox.classList.add('d-none');
+        }, 10000);
+    }
+
+    async function getErrorMessage(response) {
+        const text = await response.text();
+
+        try {
+            const error = JSON.parse(text);
+
+            if (error.errors) {
+                return Object.values(error.errors).join(', ');
+            }
+
+            return error.message || 'Request failed';
+        } catch (e) {
+            return text || 'Request failed';
+        }
+    }
+
     function renderUsers(data) {
         const body = document.getElementById('userBody');
+        const usersCount = document.getElementById('usersCount');
+        const emptyState = document.getElementById('emptyState');
+
         body.innerHTML = '';
+        usersCount.textContent = data.length + (data.length === 1 ? ' User' : ' Users');
+
+        if (data.length === 0) {
+            emptyState.classList.remove('d-none');
+            return;
+        }
+
+        emptyState.classList.add('d-none');
 
         data.forEach(user => {
             body.innerHTML += `
                 <tr>
                     <td>${user.name}</td>
                     <td>${user.email}</td>
-                    <td>
-                        <button onclick="editUser(${user.id}, '${user.name}', '${user.email}')">Edit</button>
-                        <button onclick="deleteUser(${user.id})">Delete</button>
+                    <td class="text-center">
+                        <button class="btn btn-sm btn-warning me-2" onclick="editUser(${user.id}, '${user.name}', '${user.email}')">
+                            Edit
+                        </button>
+                        <button class="btn btn-sm btn-danger" onclick="deleteUser(${user.id})">
+                            Delete
+                        </button>
                     </td>
                 </tr>`;
         });
@@ -54,7 +156,10 @@
         fetch('/api/users')
             .then(res => res.json())
             .then(data => renderUsers(data))
-            .catch(err => console.error("Error loading users:", err));
+            .catch(err => {
+                console.error("Error loading users:", err);
+                showMessage('Error loading users', 'danger');
+            });
     }
 
     function searchUsers() {
@@ -68,7 +173,10 @@
         fetch('/api/users/search?name=' + encodeURIComponent(name))
             .then(res => res.json())
             .then(data => renderUsers(data))
-            .catch(err => console.error("Error searching users:", err));
+            .catch(err => {
+                console.error("Error searching users:", err);
+                showMessage('Error searching users', 'danger');
+            });
     }
 
     function resetSearch() {
@@ -81,8 +189,8 @@
         const emailField = document.getElementById('email');
 
         const userData = {
-            name: nameField.value,
-            email: emailField.value
+            name: nameField.value.trim(),
+            email: emailField.value.trim()
         };
 
         fetch('/api/add', {
@@ -90,16 +198,20 @@
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify(userData)
         })
-            .then(response => {
+            .then(async response => {
                 if (response.ok) {
-                    alert('User Added!');
+                    showMessage('User added successfully!', 'success');
                     clearForm();
                     resetSearch();
                 } else {
-                    response.text().then(message => alert(message));
+                    const message = await getErrorMessage(response);
+                    showMessage(message, 'danger');
                 }
             })
-            .catch(err => console.error("Error adding user:", err));
+            .catch(err => {
+                console.error("Error adding user:", err);
+                showMessage('Error adding user', 'danger');
+            });
     }
 
     function editUser(id, name, email) {
@@ -110,29 +222,35 @@
         document.getElementById('submit').style.display = 'none';
         document.getElementById('updateBtn').style.display = 'inline-block';
         document.getElementById('cancelBtn').style.display = 'inline-block';
+
+        showMessage('Edit mode enabled', 'info');
     }
 
     function updateUser() {
         const id = document.getElementById('userId').value;
-        const name = document.getElementById('name').value;
-        const email = document.getElementById('email').value;
+        const name = document.getElementById('name').value.trim();
+        const email = document.getElementById('email').value.trim();
 
         fetch('/api/users/' + id, {
             method: 'PUT',
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({ name, email })
         })
-            .then(response => {
+            .then(async response => {
                 if (response.ok) {
-                    alert('User Updated!');
+                    showMessage('User updated successfully!', 'success');
                     clearForm();
                     showAddMode();
                     resetSearch();
                 } else {
-                    response.text().then(message => alert(message));
+                    const message = await getErrorMessage(response);
+                    showMessage(message, 'danger');
                 }
             })
-            .catch(err => console.error("Error updating user:", err));
+            .catch(err => {
+                console.error("Error updating user:", err);
+                showMessage('Error updating user', 'danger');
+            });
     }
 
     function deleteUser(id) {
@@ -143,20 +261,25 @@
         fetch('/api/users/' + id, {
             method: 'DELETE'
         })
-            .then(response => {
+            .then(async response => {
                 if (response.ok) {
-                    alert('User Deleted!');
+                    showMessage('User deleted successfully!', 'success');
                     resetSearch();
                 } else {
-                    alert('Error deleting user');
+                    const message = await getErrorMessage(response);
+                    showMessage(message, 'danger');
                 }
             })
-            .catch(err => console.error("Error deleting user:", err));
+            .catch(err => {
+                console.error("Error deleting user:", err);
+                showMessage('Error deleting user', 'danger');
+            });
     }
 
     function cancelEdit() {
         clearForm();
         showAddMode();
+        showMessage('Edit cancelled', 'secondary');
     }
 
     function clearForm() {
@@ -173,5 +296,8 @@
 
     window.onload = loadUsers;
 </script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
 </body>
 </html>

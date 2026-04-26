@@ -193,5 +193,80 @@ class DemoApplicationTests {
                 .andExpect(jsonPath("$[0].email").value("bashayer@test.com"));
     }
 
+    @Test
+    void testAddUserWithShortName() throws Exception {
+        String invalidUserJson = "{\"name\":\"A\",\"email\":\"shortname@test.com\"}";
+
+        mockMvc.perform(post("/api/add")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(invalidUserJson))
+                .andExpect(status().isBadRequest());
+    }
+
+
+    @Test
+    void testGetNonExistingUserReturnsNotFound() throws Exception {
+        mockMvc.perform(get("/api/users/9999"))
+                .andExpect(status().isNotFound());
+    }
+// ... existing code ...
+
+    @Test
+    void testUpdateNonExistingUserReturnsNotFound() throws Exception {
+        String updateJson = "{\"name\":\"Updated User\",\"email\":\"updated@test.com\"}";
+
+        mockMvc.perform(put("/api/users/9999")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(updateJson))
+                .andExpect(status().isNotFound());
+    }
+// ... existing code ...
+
+    @Test
+    void testDeleteNonExistingUserReturnsNotFound() throws Exception {
+        mockMvc.perform(delete("/api/users/9999"))
+                .andExpect(status().isNotFound());
+    }
+// ... existing code ...
+
+    @Test
+    void testSearchUsersByNonExistingNameReturnsEmptyList() throws Exception {
+        mockMvc.perform(post("/api/add")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"name\":\"Bashayer\",\"email\":\"bashayer@test.com\"}"))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(get("/api/users/search")
+                        .param("name", "NotFoundName"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(0));
+    }
+// ... existing code ...
+
+    @Test
+    void testUpdateUserWithDuplicateEmail() throws Exception {
+        String firstUserResult = mockMvc.perform(post("/api/add")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"name\":\"First User\",\"email\":\"first@test.com\"}"))
+                .andExpect(status().isOk())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+
+        mockMvc.perform(post("/api/add")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"name\":\"Second User\",\"email\":\"second@test.com\"}"))
+                .andExpect(status().isOk());
+
+        Integer firstUserId = JsonPath.read(firstUserResult, "$.id");
+
+        String updateJson = "{\"name\":\"First User Updated\",\"email\":\"second@test.com\"}";
+
+        mockMvc.perform(put("/api/users/" + firstUserId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(updateJson))
+                .andExpect(status().isBadRequest());
+    }
+
 // ... existing code ...
 }
