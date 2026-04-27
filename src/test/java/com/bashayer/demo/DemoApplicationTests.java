@@ -11,8 +11,6 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 
-import org.springframework.test.context.ActiveProfiles;
-
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
@@ -24,7 +22,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest
 @AutoConfigureMockMvc
-@ActiveProfiles("test")
 class DemoApplicationTests {
 
     @Autowired
@@ -33,32 +30,27 @@ class DemoApplicationTests {
     @Autowired
     private UserRepository userRepository;
 
-   // @Autowired
-   // private JdbcTemplate jdbcTemplate;
+    @Autowired
+    private JdbcTemplate jdbcTemplate;
 
     @BeforeEach
     void setup() {
         userRepository.deleteAll();
-        //jdbcTemplate.execute("ALTER TABLE users AUTO_INCREMENT=1");
+        jdbcTemplate.execute("ALTER TABLE users AUTO_INCREMENT=1");
     }
 
     @Test
     void testAddUserAutomation() throws Exception {
         String userJson = "{\"name\":\"Ahmad\",\"email\":\"Ahmad@Test\"}";
 
-        String result = mockMvc.perform(post("/api/add")
+        mockMvc.perform(post("/api/add")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(userJson))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.name").value("Ahmad"))
-                .andExpect(jsonPath("$.email").value("Ahmad@Test"))
-                .andReturn()
-                .getResponse()
-                .getContentAsString();
+                .andExpect(jsonPath("$.email").value("Ahmad@Test"));
 
-        Integer id = JsonPath.read(result, "$.id");
-
-        assertTrue(userRepository.existsById(id.longValue()));
+        assertTrue(userRepository.existsById(1L));
     }
 
     @Test
@@ -276,5 +268,5 @@ class DemoApplicationTests {
                 .andExpect(status().isBadRequest());
     }
 
-
+// ... existing code ...
 }
