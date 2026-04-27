@@ -40,6 +40,16 @@
 
 ---
 
+## 4. Priority
+
+| Priority | Description |
+|---|---|
+| High | Must be fixed immediately |
+| Medium | Should be fixed soon |
+| Low | Can be fixed later |
+
+---
+
 ## 5. Bug Description
 
 Describe the issue clearly
@@ -173,6 +183,12 @@ To be filled after investigation.
 ---
 
 ## 17. Suggested Fix
+
+---
+
+## 18. Retest Notes
+
+To be filled after the fix.
 
 ---
 
