@@ -243,6 +243,19 @@ The Selenium E2E tests cover:
 
 ---
 
+## Future Enhancements
+
+- Run Selenium tests in GitHub Actions
+- Upload Extent Report as GitHub Actions artifact
+- Add cross-browser testing
+- Add performance testing
+- Add security testing
+- Add accessibility testing
+- Add code coverage reports
+- Add Allure Reports
+- Add Docker support
+
+---
 
 ## Author
 
