@@ -12,7 +12,7 @@ on:
 
 jobs:
   api-tests:
-    name: Run API Automation Tests
+    name: Run API Tests
     runs-on: ubuntu-latest
 
     steps:
