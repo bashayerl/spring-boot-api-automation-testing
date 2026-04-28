@@ -113,32 +113,32 @@ demo/
 │   │   │
 │   │   └── resources/
 │   │       ├── static/
-│   │       │   └── index.html          # Bootstrap UI
+│   │       │   └── index.html         
 │   │       │
 │   │       ├── templates/
 │   │       │
-│   │       └── application.properties  # Main application configuration
+│   │       └── application.properties  
 │   │
 │   └── test/
 │       ├── java/
 │       │   ├── com/bashayer/demo/
-│       │   │   ├── DemoApplicationTests.java  # API automation tests
-│       │   │   └── UserE2ETest.java           # Selenium E2E tests
+│       │   │   ├── DemoApplicationTests.java  
+│       │   │   └── UserE2ETest.java           
 │       │   │
 │       │   └── pages/
-│       │       └── UsersPage.java             # Page Object Model
+│       │       └── UsersPage.java            
 │       │
 │       └── resources/
-│           └── application-test.properties    # Test database configuration
+│           └── application-test.properties    
 │
-├── BUG_REPORT_TEMPLATE.md              # Bug reporting template
-├── QA_SUMMARY.md                       # QA coverage summary
-├── README.md                           # Project documentation
-├── TEST_CASES.md                       # Test cases documentation
-├── TEST_PLAN.md                        # Test plan documentation
-├── pom.xml                             # Maven dependencies
-├── mvnw                                # Maven wrapper for Linux/macOS
-├── mvnw.cmd                            # Maven wrapper for Windows
+├── BUG_REPORT_TEMPLATE.md              
+├── QA_SUMMARY.md                       
+├── README.md                           
+├── TEST_CASES.md                      
+├── TEST_PLAN.md                        
+├── pom.xml                           
+├── mvnw                               
+├── mvnw.cmd                           
 └── .gitattributes
 
 
